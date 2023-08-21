@@ -197,7 +197,8 @@ int CServerBan::BanExt(T *pBanPool, const typename T::CDataType *pData, int Seco
 		}
 	}
 
-	int Result = Ban(pBanPool, pData, Seconds, pReason);
+	// int Result = Ban(pBanPool, pData, Seconds, pReason);
+	int Result = 0;
 	if(Result != 0)
 		return Result;
 
@@ -212,7 +213,7 @@ int CServerBan::BanExt(T *pBanPool, const typename T::CDataType *pData, int Seco
 		{
 			CNetHash NetHash(&Data);
 			char aBuf[256];
-			MakeBanInfo(pBanPool->Find(&Data, &NetHash), aBuf, sizeof(aBuf), MSGTYPE_PLAYER);
+			// MakeBanInfo(pBanPool->Find(&Data, &NetHash), aBuf, sizeof(aBuf), MSGTYPE_PLAYER);
 			Server()->m_NetServer.Drop(i, aBuf);
 		}
 	}

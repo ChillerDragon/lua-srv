@@ -240,110 +240,110 @@ typename CNetBan::CBan<T> *CNetBan::CBanPool<T, HashCount>::Get(int Index) const
 }
 
 
-template<class T>
-void CNetBan::MakeBanInfo(const CBan<T> *pBan, char *pBuf, unsigned BuffSize, int Type) const
-{
-	if(pBan == 0 || pBuf == 0)
-	{
-		if(BuffSize > 0)
-			pBuf[0] = 0;
-		return;
-	}
+// template<class T>
+// void CNetBan::MakeBanInfo(const CBan<T> *pBan, char *pBuf, unsigned BuffSize, int Type) const
+// {
+// 	if(pBan == 0 || pBuf == 0)
+// 	{
+// 		if(BuffSize > 0)
+// 			pBuf[0] = 0;
+// 		return;
+// 	}
 	
-	// build type based part
-	char aBuf[256];
-	if(Type == MSGTYPE_PLAYER)
-		str_copy(aBuf, "You have been banned", sizeof(aBuf));
-	else
-	{
-		char aTemp[256];
-		switch(Type)
-		{
-		case MSGTYPE_LIST:
-			str_format(aBuf, sizeof(aBuf), "%s banned", NetToString(&pBan->m_Data, aTemp, sizeof(aTemp))); break;
-		case MSGTYPE_BANADD:
-			str_format(aBuf, sizeof(aBuf), "banned %s", NetToString(&pBan->m_Data, aTemp, sizeof(aTemp))); break;
-		case MSGTYPE_BANREM:
-			str_format(aBuf, sizeof(aBuf), "unbanned %s", NetToString(&pBan->m_Data, aTemp, sizeof(aTemp))); break;
-		default:
-			aBuf[0] = 0;
-		}
-	}
+// 	// build type based part
+// 	char aBuf[256];
+// 	if(Type == MSGTYPE_PLAYER)
+// 		str_copy(aBuf, "You have been banned", sizeof(aBuf));
+// 	else
+// 	{
+// 		char aTemp[256];
+// 		switch(Type)
+// 		{
+// 		case MSGTYPE_LIST:
+// 			str_format(aBuf, sizeof(aBuf), "%s banned", NetToString(&pBan->m_Data, aTemp, sizeof(aTemp))); break;
+// 		case MSGTYPE_BANADD:
+// 			str_format(aBuf, sizeof(aBuf), "banned %s", NetToString(&pBan->m_Data, aTemp, sizeof(aTemp))); break;
+// 		case MSGTYPE_BANREM:
+// 			str_format(aBuf, sizeof(aBuf), "unbanned %s", NetToString(&pBan->m_Data, aTemp, sizeof(aTemp))); break;
+// 		default:
+// 			aBuf[0] = 0;
+// 		}
+// 	}
 
-	// add info part
-	if(pBan->m_Info.m_Expires != CBanInfo::EXPIRES_NEVER)
-	{
-		int Mins = ((pBan->m_Info.m_Expires-time_timestamp()) + 59) / 60;
-		if(Mins <= 1)
-			str_format(pBuf, BuffSize, "%s for 1 minute (%s)", aBuf, pBan->m_Info.m_aReason);
-		else
-			str_format(pBuf, BuffSize, "%s for %d minutes (%s)", aBuf, Mins, pBan->m_Info.m_aReason);
-	}
-	else
-		str_format(pBuf, BuffSize, "%s for life (%s)", aBuf, pBan->m_Info.m_aReason);
-}
+// 	// add info part
+// 	if(pBan->m_Info.m_Expires != CBanInfo::EXPIRES_NEVER)
+// 	{
+// 		int Mins = ((pBan->m_Info.m_Expires-time_timestamp()) + 59) / 60;
+// 		if(Mins <= 1)
+// 			str_format(pBuf, BuffSize, "%s for 1 minute (%s)", aBuf, pBan->m_Info.m_aReason);
+// 		else
+// 			str_format(pBuf, BuffSize, "%s for %d minutes (%s)", aBuf, Mins, pBan->m_Info.m_aReason);
+// 	}
+// 	else
+// 		str_format(pBuf, BuffSize, "%s for life (%s)", aBuf, pBan->m_Info.m_aReason);
+// }
 
-template<class T>
-int CNetBan::Ban(T *pBanPool, const typename T::CDataType *pData, int Seconds, const char *pReason)
-{
-	// do not ban localhost
-	if(NetMatch(pData, &m_LocalhostIPV4) || NetMatch(pData, &m_LocalhostIPV6))
-	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban failed (localhost)");
-		return -1;
-	}
+// template<class T>
+// int CNetBan::Ban(T *pBanPool, const typename T::CDataType *pData, int Seconds, const char *pReason)
+// {
+// 	// do not ban localhost
+// 	if(NetMatch(pData, &m_LocalhostIPV4) || NetMatch(pData, &m_LocalhostIPV6))
+// 	{
+// 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban failed (localhost)");
+// 		return -1;
+// 	}
 
-	int Stamp = Seconds > 0 ? time_timestamp()+Seconds : CBanInfo::EXPIRES_NEVER;
+// 	int Stamp = Seconds > 0 ? time_timestamp()+Seconds : CBanInfo::EXPIRES_NEVER;
 
-	// set up info
-	CBanInfo Info = {0};
-	Info.m_Expires = Stamp;
-	str_copy(Info.m_aReason, pReason, sizeof(Info.m_aReason));
+// 	// set up info
+// 	CBanInfo Info = {0};
+// 	Info.m_Expires = Stamp;
+// 	str_copy(Info.m_aReason, pReason, sizeof(Info.m_aReason));
 
-	// check if it already exists
-	CNetHash NetHash(pData);
-	CBan<typename T::CDataType> *pBan = pBanPool->Find(pData, &NetHash);
-	if(pBan)
-	{
-		// adjust the ban
-		pBanPool->Update(pBan, &Info);
-		char aBuf[128];
-		MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_LIST);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
-		return 1;
-	}
+// 	// check if it already exists
+// 	CNetHash NetHash(pData);
+// 	CBan<typename T::CDataType> *pBan = pBanPool->Find(pData, &NetHash);
+// 	if(pBan)
+// 	{
+// 		// adjust the ban
+// 		pBanPool->Update(pBan, &Info);
+// 		char aBuf[128];
+// 		MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_LIST);
+// 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
+// 		return 1;
+// 	}
 
-	// add ban and print result
-	pBan = pBanPool->Add(pData, &Info, &NetHash);
-	if(pBan)
-	{
-		char aBuf[128];
-		MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_BANADD);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
-		return 0;
-	}
-	else
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban failed (full banlist)");
-	return -1;
-}
+// 	// add ban and print result
+// 	pBan = pBanPool->Add(pData, &Info, &NetHash);
+// 	if(pBan)
+// 	{
+// 		char aBuf[128];
+// 		MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_BANADD);
+// 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
+// 		return 0;
+// 	}
+// 	else
+// 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban failed (full banlist)");
+// 	return -1;
+// }
 
-template<class T>
-int CNetBan::Unban(T *pBanPool, const typename T::CDataType *pData)
-{
-	CNetHash NetHash(pData);
-	CBan<typename T::CDataType> *pBan = pBanPool->Find(pData, &NetHash);
-	if(pBan)
-	{
-		char aBuf[256];
-		MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_BANREM);
-		pBanPool->Remove(pBan);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
-		return 0;
-	}
-	else
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "unban failed (invalid entry)");
-	return -1;
-}
+// template<class T>
+// int CNetBan::Unban(T *pBanPool, const typename T::CDataType *pData)
+// {
+// 	CNetHash NetHash(pData);
+// 	CBan<typename T::CDataType> *pBan = pBanPool->Find(pData, &NetHash);
+// 	if(pBan)
+// 	{
+// 		char aBuf[256];
+// 		MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_BANREM);
+// 		pBanPool->Remove(pBan);
+// 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
+// 		return 0;
+// 	}
+// 	else
+// 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "unban failed (invalid entry)");
+// 	return -1;
+// }
 
 void CNetBan::Init(IConsole *pConsole, IStorage *pStorage)
 {
@@ -386,13 +386,15 @@ void CNetBan::Update()
 
 int CNetBan::BanAddr(const NETADDR *pAddr, int Seconds, const char *pReason)
 {
-	return Ban(&m_BanAddrPool, pAddr, Seconds, pReason);
+	return 0;
+	// return Ban(&m_BanAddrPool, pAddr, Seconds, pReason);
 }
 
 int CNetBan::BanRange(const CNetRange *pRange, int Seconds, const char *pReason)
 {
 	if(pRange->IsValid())
-		return Ban(&m_BanRangePool, pRange, Seconds, pReason);
+		return 0;
+		// return Ban(&m_BanRangePool, pRange, Seconds, pReason);
 
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban failed (invalid range)");
 	return -1;
@@ -400,15 +402,16 @@ int CNetBan::BanRange(const CNetRange *pRange, int Seconds, const char *pReason)
 
 int CNetBan::UnbanByAddr(const NETADDR *pAddr)
 {
-	return Unban(&m_BanAddrPool, pAddr);
+	return 0;
+	// return Unban(&m_BanAddrPool, pAddr);
 }
 
 int CNetBan::UnbanByRange(const CNetRange *pRange)
 {
-	if(pRange->IsValid())
-		return Unban(&m_BanRangePool, pRange);
+	// if(pRange->IsValid())
+	// 	return Unban(&m_BanRangePool, pRange);
 	
-	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban failed (invalid range)");
+	// Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban failed (invalid range)");
 	return -1;
 }
 
@@ -452,7 +455,7 @@ bool CNetBan::IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize) co
 	CBanAddr *pBan = m_BanAddrPool.Find(pAddr, &aHash[Length]);
 	if(pBan)
 	{
-		MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER);
+		// MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER);
 		return true;
 	}
 
@@ -463,7 +466,7 @@ bool CNetBan::IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize) co
 		{
 			if(NetMatch(&pBan->m_Data, pAddr, i, Length))
 			{
-				MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER);
+				// MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER);
 				return true;
 			}
 		}
@@ -550,13 +553,13 @@ void CNetBan::ConBans(IConsole::IResult *pResult, void *pUser)
 	char aBuf[256], aMsg[256];
 	for(CBanAddr *pBan = pThis->m_BanAddrPool.First(); pBan; pBan = pBan->m_pNext)
 	{
-		pThis->MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_LIST);
+		// pThis->MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_LIST);
 		str_format(aMsg, sizeof(aMsg), "#%i %s", Count++, aBuf);
 		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aMsg);
 	}
 	for(CBanRange *pBan = pThis->m_BanRangePool.First(); pBan; pBan = pBan->m_pNext)
 	{
-		pThis->MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_LIST);
+		// pThis->MakeBanInfo(pBan, aBuf, sizeof(aBuf), MSGTYPE_LIST);
 		str_format(aMsg, sizeof(aMsg), "#%i %s", Count++, aBuf);
 		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aMsg);
 	}
